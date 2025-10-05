@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SNX Unique ID Generator</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    h2 { color: #222; }
+    input, select, button {
+      padding: 10px; margin: 6px; border-radius: 8px;
+      border: 1px solid #ccc; width: 250px;
+    }
+    button {
+      background: gold; border: none; font-weight: bold; cursor: pointer;
+    }
+    button:hover { background: #ffcc00; }
+    .result {
+      margin-top: 15px; color: #007700; font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h2>Generate Unique ID 🔐</h2>
+  <input id="brand" placeholder="Brand Name" />
+  <select id="plan">
+    <option value="">Select Plan</option>
+    <option value="Free">Free</option>
+    <option value="Standard">Standard</option>
+    <option value="Premium">Premium</option>
+  </select>
+  <button onclick="generate()">Submit</button>
+  <div class="result" id="result"></div>
+
+  <script>
+    async function generate() {
+      const brand_name = document.getElementById("brand").value;
+      const plan_type = document.getElementById("plan").value;
+      const resultBox = document.getElementById("result");
+
+      if (!brand_name || !plan_type) {
+        resultBox.textContent = "⚠️ Please fill all fields!";
+        return;
+      }
+
+      resultBox.textContent = "⏳ Generating...";
+
+      const response = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brand_name, plan_type }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        resultBox.innerHTML = `✅ Unique ID Generated: <b>${data.unique_id}</b>`;
+      } else {
+        resultBox.textContent = "❌ Error: " + (data.error || data.message);
+      }
+    }
+  </script>
+</body>
+</html>
