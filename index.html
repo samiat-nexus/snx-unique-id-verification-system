@@ -1,71 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SNX Unique ID Generator</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brand Registration | Samiat Nexus</title>
   <style>
     body {
-      font-family: "Segoe UI", sans-serif;
-      background: #fff;
+      font-family: "Poppins", sans-serif;
+      background: #ffffff;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       height: 100vh;
     }
-    h2 { color: #222; }
-    input, select, button {
-      padding: 10px; margin: 6px; border-radius: 8px;
-      border: 1px solid #ccc; width: 250px;
+    form {
+      background: #f8f8f8;
+      padding: 25px 30px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 360px;
+    }
+    h2 {
+      text-align: center;
+      color: #111;
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: 600;
+      color: #333;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      margin-bottom: 18px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
     }
     button {
-      background: gold; border: none; font-weight: bold; cursor: pointer;
+      width: 100%;
+      padding: 10px;
+      background: #d4af37;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
     }
-    button:hover { background: #ffcc00; }
-    .result {
-      margin-top: 15px; color: #007700; font-weight: 600;
+    button:hover {
+      background: #b89025;
+    }
+    .message {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
-  <h2>Generate Unique ID 🔐</h2>
-  <input id="brand" placeholder="Brand Name" />
-  <select id="plan">
-    <option value="">Select Plan</option>
-    <option value="Free">Free</option>
-    <option value="Standard">Standard</option>
-    <option value="Premium">Premium</option>
-  </select>
-  <button onclick="generate()">Submit</button>
-  <div class="result" id="result"></div>
+
+  <form id="brandForm">
+    <h2>Brand Registration</h2>
+    
+    <label for="brand_name">Brand Name</label>
+    <input type="text" id="brand_name" placeholder="Enter brand name" required>
+
+    <label for="plan_type">Plan Type</label>
+    <select id="plan_type" required>
+      <option value="">Select plan</option>
+      <option value="Basic">Basic</option>
+      <option value="Premium">Premium</option>
+      <option value="Enterprise">Enterprise</option>
+    </select>
+
+    <button type="submit">Submit</button>
+
+    <div class="message" id="message"></div>
+  </form>
 
   <script>
-    async function generate() {
-      const brand_name = document.getElementById("brand").value;
-      const plan_type = document.getElementById("plan").value;
-      const resultBox = document.getElementById("result");
+    document.getElementById("brandForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-      if (!brand_name || !plan_type) {
-        resultBox.textContent = "⚠️ Please fill all fields!";
-        return;
-      }
-
-      resultBox.textContent = "⏳ Generating...";
+      const brand_name = document.getElementById("brand_name").value.trim();
+      const plan_type = document.getElementById("plan_type").value;
 
       const response = await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brand_name, plan_type }),
+        body: JSON.stringify({ brand_name, plan_type })
       });
 
-      const data = await response.json();
-      if (data.success) {
-        resultBox.innerHTML = `✅ Unique ID Generated: <b>${data.unique_id}</b>`;
+      const result = await response.json();
+      const messageDiv = document.getElementById("message");
+
+      if (response.ok) {
+        messageDiv.style.color = "green";
+        messageDiv.textContent = `✅ Saved Successfully! Unique ID: ${result.generated_id}`;
       } else {
-        resultBox.textContent = "❌ Error: " + (data.error || data.message);
+        messageDiv.style.color = "red";
+        messageDiv.textContent = `❌ Error: ${result.error || result.message}`;
       }
-    }
+    });
   </script>
+
 </body>
 </html>
