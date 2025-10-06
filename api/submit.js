@@ -1,11 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
-import { randomUUID } from 'crypto'; // 🔹 for auto unique id
 
 // 🔹 Supabase connection setup
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY
 );
+
+// 🔹 Helper function — auto generate Unique ID
+function generateUniqueID(planType) {
+  const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+  let planCode = 'GEN'; // fallback
+
+  if (planType.toLowerCase().includes('basic')) planCode = 'BSC';
+  else if (planType.toLowerCase().includes('standard')) planCode = 'STD';
+  else if (planType.toLowerCase().includes('premium')) planCode = 'PRM';
+
+  return `SNX-${planCode}-${randomPart}`;
+}
 
 // 🔹 API function to save data
 export default async function handler(req, res) {
@@ -20,10 +31,10 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // 🔹 Auto-generate unique ID
-    const unique_id = `SNX-${randomUUID().slice(0, 8).toUpperCase()}`;
+    // Generate unique ID
+    const unique_id = generateUniqueID(plan_type);
 
-    // 🔹 Save to Supabase table
+    // Save to Supabase table
     const { data, error } = await supabase
       .from('brands')
       .insert([{ brand_name, unique_id, plan_type }]);
@@ -32,13 +43,9 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: error.message });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: 'Data saved successfully!',
-      unique_id,
-      data
-    });
+    return res.status(200).json({ message: 'Data saved successfully', unique_id });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
 }
+
