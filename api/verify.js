@@ -1,57 +1,35 @@
 import { createClient } from '@supabase/supabase-js';
 
-// 🔹 Supabase connection
+// 🔹 Supabase connection setup
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY
 );
 
+// 🔹 API function to save data
 export default async function handler(req, res) {
-  try {
-    // 🔹 Get unique_id from request query
-    const { unique_id } = req.query;
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-    if (!unique_id) {
-      return res.status(400).json({ verified: false, message: 'Unique ID is required' });
+  try {
+    const { brand_name, unique_id, plan_type } = req.body;
+
+    if (!brand_name || !unique_id || !plan_type) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // 🔹 Fetch brand data from Supabase
+    // Save to Supabase table
     const { data, error } = await supabase
       .from('brands')
-      .select('*')
-      .eq('unique_id', unique_id)
-      .single();
+      .insert([{ brand_name, unique_id, plan_type }]);
 
-    if (error || !data) {
-      return res.status(404).json({ verified: false, message: 'Invalid Unique ID' });
+    if (error) {
+      return res.status(500).json({ error: error.message });
     }
 
-    // 🔹 Check if service expired
-    const today = new Date().toISOString().split('T')[0];
-    if (today > data.expiry_date) {
-      // Optional: Update is_active = false
-      await supabase
-        .from('brands')
-        .update({ is_active: false })
-        .eq('unique_id', unique_id);
-
-      return res.status(200).json({
-        verified: false,
-        message: '❌ Service expired. Please renew your plan.',
-        expired_on: data.expiry_date
-      });
-    }
-
-    // 🔹 If still active
-    return res.status(200).json({
-      verified: true,
-      message: '✅ Service is active and verified!',
-      brand_name: data.brand_name,
-      plan_type: data.plan_type,
-      expiry_date: data.expiry_date
-    });
-
+    return res.status(200).json({ message: 'Data saved successfully', data });
   } catch (err) {
-    return res.status(500).json({ verified: false, message: err.message });
+    return res.status(500).json({ error: err.message });
   }
-        }
+}
